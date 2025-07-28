@@ -5,10 +5,14 @@ from django.forms import ValidationError
 
 class Service(models.Model):
     name = models.CharField(max_length=50)
+    description = models.TextField(max_length=1000, blank=True)
     price = models.FloatField(default=0.0)
     place = models.TextField()
     admin = models.TextField(max_length=255)
     extra_data = models.JSONField(default=dict, blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Order(models.Model):
@@ -36,6 +40,16 @@ class Order(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     extra_data = models.JSONField(default=dict, blank=True)
     total_price = models.FloatField(default=0)
+    
+    @property
+    def total_price_count(self):
+        price_per_hour = self.service.price
+        total_time = self.duration.total_seconds() / 3600
+        return round(price_per_hour * total_time, 2)
+    
+    def save(self, *args, **kwargs):
+        self.total_price = self.total_price_count
+        super().save(*args, **kwargs)
 
     def clean(self) -> None:
         super().clean()
