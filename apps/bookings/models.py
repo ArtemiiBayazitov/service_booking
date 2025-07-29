@@ -18,7 +18,6 @@ class Service(models.Model):
 class Order(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Ожидает подтверждения"      
-        CONFIRMED = "confirmed", "Подтверждено" 
         PREDPAID = 'prepaid', 'Предоплата внесена'          
         PAID = "paid", "Оплачено"                         
         IN_PROGRESS = "in_progress", "В процессе"         
@@ -37,17 +36,18 @@ class Order(models.Model):
     time_end = models.DateTimeField()
     full_name_client = models.CharField(max_length=255)
     contact_client = models.CharField(max_length=20)
+    email_client = models.EmailField(blank=True)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     extra_data = models.JSONField(default=dict, blank=True)
     total_price = models.FloatField(default=0)
     
     @property
-    def total_price_count(self):
+    def total_price_count(self) -> float:
         price_per_hour = self.service.price
         total_time = self.duration.total_seconds() / 3600
         return round(price_per_hour * total_time, 2)
     
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         self.total_price = self.total_price_count
         super().save(*args, **kwargs)
 

@@ -19,36 +19,38 @@
     {% if sauna.description %}
       <p class="mb-4">{{ sauna.description }}</p>
     {% endif %}
+    {% if sauna.price %}
+      <p class="price_per_hour"><strong>Стоимость в час: {{sauna.price}} руб. </strong></p>
+    {% endif %}
 
     {# Проверяем, передана ли форма в контекст #}
-    {% if form %}
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Забронировать время</h5>
-          <form method="post" novalidate>
-            {% csrf_token %}
-            {{ form.non_field_errors }}
-            {% for field in form %}
-              <div class="mb-3">
-                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field|add_class:"form-control" }}
-                {% if field.help_text %}
-                  <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-                {% for error in field.errors %}
-                  <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
-              </div>
+{% if form %}
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Забронировать время</h5>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field|add_class:"form-control" }}
+            {% if field.help_text %}
+              <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
             {% endfor %}
-            <button type="submit" class="btn btn-success">Забронировать</button>
-          </form>
-        </div>
-      </div>
-    {% else %}
-      <a href="#" class="btn btn-success btn-lg">Выбрать дату и время</a>
-      <p class="text-muted mt-2">Подключим форму на следующем шаге.</p>
-    {% endif %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-success">Забронировать</button>
+      </form>
+    </div>
   </div>
-</div>
+{% else %}
+  <a href="{% url 'order_create' %}?sauna={{ sauna.id }}" class="btn btn-success btn-lg">
+    Выбрать дату и время
+  </a>
+  <p class="text-muted mt-2">Подключим форму на следующем шаге.</p>
+{% endif %}
 {% endblock %}
- 

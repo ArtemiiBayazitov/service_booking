@@ -18,6 +18,9 @@
             {% if sauna.description %}
               <p class="card-text">{{ sauna.description|truncatewords:25 }}</p>
             {% endif %}
+            {% if sauna.price %}
+              <p class="card-price"> <strong>{{ sauna.price }}</strong> руб. </p>
+            {% endif %}
             <div class="mt-auto">
               <a href="{% url 'sauna_detail' sauna.pk %}" class="btn btn-primary w-100">Забронировать</a>
             </div>

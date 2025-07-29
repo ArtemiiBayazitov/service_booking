@@ -7,12 +7,21 @@ from django.utils import timezone
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['full_name_client', 'contact_client', 'time_start', 'time_end', 'service']
+        fields = ['full_name_client', 'email_client', 'contact_client', 'time_start', 'time_end', 'service']
         widgets = {
-            'time_start': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
-            'time_end': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'time_start': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'form-control',
+                'step': 900
+            }),
+            'time_end': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'form-control',
+                'step': 900
+                }),
             'full_name_client': forms.TextInput(attrs={'class': 'form-control'}),
             'contact_client': forms.TextInput(attrs={'class': 'form-control'}),
+            'email_client': forms.EmailInput(attrs={'class': 'form-control'}),
             'service': forms.Select(attrs={'class': 'form-select'}),
         }
         labels = {
@@ -20,6 +29,7 @@ class OrderForm(forms.ModelForm):
             'contact_client': 'Контактный телефон',
             'time_start': 'Начало бронирования',
             'time_end': 'Окончание бронирования',
+            'email_client': 'EMAIL для подтверждения бронирования',
             'service': 'Сауна / Услуга',
         }
 

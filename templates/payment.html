@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Оплата бронирования{% endblock %}
+
+{% block content %}
+<h1>Выберите действие с оплатой(мок)</h1>
+
+<div class="d-flex flex-column gap-3 mt-4" style="max-width: 300px;">
+    <button type="button" class="btn btn-warning">Внести предоплату</button>
+    <button type="button" class="btn btn-success">Внести оплату полностью</button>
+    <button type="button" class="btn btn-danger">Отказаться от оплаты</button>
+</div>
+{% endblock %}

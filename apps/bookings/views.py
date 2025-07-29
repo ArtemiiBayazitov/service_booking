@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.views.generic.edit import CreateView
+from django.views.generic import TemplateView
 from .models import Service, Order
 from .forms import OrderForm
 from django.views.generic import ListView, DetailView
@@ -20,12 +21,24 @@ class SaunaDetailView(DetailView):
 class OrderCreateView(CreateView):
     model = Order
     form_class = OrderForm
-    template_name = 'order_form.html'  # создашь шаблон
-    success_url = '/'  # перенаправление после успешной отправки
+    template_name = 'order_create.html'  # создашь шаблон
+    success_url = 'payment/'  # перенаправление после успешной отправки
 
     def form_valid(self, form) -> HttpResponse:
         # здесь можно пересчитать цену, extra_data, и т.д.
         return super().form_valid(form)
+    
+    def get_initial(self):
+        initial = super().get_initial()
+        sauna_id = self.request.GET.get('sauna')
+        if sauna_id:
+            initial['service'] = sauna_id
+        return initial
+    
+
+class PaymentView(TemplateView):
+    template_name = 'payment.html'
+    
 
     
 
