@@ -53,8 +53,9 @@ class Order(models.Model):
 
     def clean(self) -> None:
         super().clean()
-        if self.time_end <= self.time_start:
-            raise ValidationError('Время окончания должно быть позже начала')
+        if self.time_start and self.time_end:
+            if self.time_end <= self.time_start:
+                raise ValidationError('Время окончания должно быть позже начала')
         
     @property
     def duration(self) -> timedelta:

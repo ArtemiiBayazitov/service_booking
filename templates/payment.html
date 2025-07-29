@@ -3,11 +3,18 @@
 {% block title %}Оплата бронирования{% endblock %}
 
 {% block content %}
-<h1>Выберите действие с оплатой(мок)</h1>
+<h1>Выберите действие с оплатой (мок)</h1>
+<h3>Подтверждение бронирования</h3>
+<p>Номер заказа: {{ order_id }}</p>
+<p>ФИО: {{ order_data.full_name_client }}</p>
+<p>Телефон: {{ order_data.contact_client }}</p>
+<p>Дата: {{ order_data.time_start }} — {{ order_data.time_end }}</p>
+<p>Сауна: {{ order_data.service }}</p>
 
-<div class="d-flex flex-column gap-3 mt-4" style="max-width: 300px;">
-    <button type="button" class="btn btn-warning">Внести предоплату</button>
-    <button type="button" class="btn btn-success">Внести оплату полностью</button>
-    <button type="button" class="btn btn-danger">Отказаться от оплаты</button>
-</div>
+<form method="post" class="d-flex flex-column gap-3 mt-4" style="max-width: 300px;">
+  {% csrf_token %}
+  <button name="action" value="prepaid" class="btn btn-warning">Внести предоплату</button>
+  <button name="action" value="paid" class="btn btn-success">Внести оплату полностью</button>
+  <button name="action" value="cancel" class="btn btn-danger">Отказаться от оплаты</button>
+</form>
 {% endblock %}

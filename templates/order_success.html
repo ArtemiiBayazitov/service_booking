@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Бронирование подтверждено{% endblock %}
+
+{% block content %}
+<h1>Спасибо за бронирование!</h1>
+<p>Номер заказа: {{ order.pk }}</p>
+<p>ФИО: {{ order.full_name_client }}</p>
+<p>Телефон: {{ order.contact_client }}</p>
+<p>Дата: {{ order.time_start }} — {{ order.time_end }}</p>
+<p>Сауна: {{ order.service }}</p>
+<p>Статус: {{ order.get_status_display }}</p>
+{% endblock %}
