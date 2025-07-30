@@ -9,7 +9,11 @@
 <p>ФИО: {{ order_data.full_name_client }}</p>
 <p>Телефон: {{ order_data.contact_client }}</p>
 <p>Дата: {{ order_data.time_start }} — {{ order_data.time_end }}</p>
-<p>Сауна: {{ order_data.service }}</p>
+<p>Сауна: {{ service.name }}</p>
+<p>Полная стоимость: {{order_data.price}}
+<p>Аванс: {{ price_per_hour }} ₽</p>
+<p>Продолжительность: {{ duration_hours|floatformat:0 }} ч.</p>
+<p><strong>Итого: {{ total_price|floatformat:0 }} ₽</strong></p>
 
 <form method="post" class="d-flex flex-column gap-3 mt-4" style="max-width: 300px;">
   {% csrf_token %}

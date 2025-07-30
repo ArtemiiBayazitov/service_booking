@@ -58,8 +58,27 @@ class PaymentView(TemplateView):
 
         if not order_data:
             raise Http404("Заказ не найден или устарел.")
-        context['order_id'] = order_id
-        context['order_data'] = order_data
+
+        try:
+            service = Service.objects.get(pk=order_data['service'])
+        except Service.DoesNotExist:
+            raise Http404("Услуга не найдена.")
+        
+        start = order_data['time_start']
+        end = order_data['time_end']
+        duration_hours = (end - start).total_seconds() / 3600
+        price_per_hour = service.price
+        total_price = round(price_per_hour * duration_hours, 2)
+
+
+        context.update({
+            'order_id': order_id,
+            'order_data': order_data,
+            'service': service,
+            'price_per_hour': price_per_hour,
+            'duration_hours': duration_hours,
+            'total_price': total_price,
+        })
 
         return context
     
