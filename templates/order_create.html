@@ -15,6 +15,54 @@
         {% endfor %}
       </div>
     {% endfor %}
+    <button onclick="sendAjaxRequest()">Отправить запрос</button>
+    <div id="result"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function() {
+      // Привязываем AJAX к событию change поля time_start
+      $('#id_time_start').on('change', function() {
+        $.ajax({
+          url: '{% url "ajax_json" %}',
+          type: 'GET',
+          data: {
+            time_start: $(this).val()
+          },
+          success: function(data) {
+            if (data.error) {
+              $('#result').html('<p class="text-danger">' + data.error + '</p>');
+            } else {
+              $('#result').html('<p class="text-success">' + data.message + '</p>');
+            }
+          },
+          error: function() {
+            $('#result').html('<p class="text-danger">Ошибка при загрузке данных!</p>');
+          }
+        });
+      });
+
+      // Предотвращаем перезагрузку при отправке формы (если нужно)
+      $('#bookingForm').on('submit', function(event) {
+        event.preventDefault(); // Отменяем стандартную отправку формы
+        // Если нужен POST-запрос через AJAX, можно добавить его здесь
+        $.ajax({
+          url: '{% url "ajax_json" %}',
+          type: 'POST',
+          data: $(this).serialize(), // Отправляем все данные формы
+          headers: {
+            'X-CSRFToken': $('input[name=csrfmiddlewaretoken]').val()
+          },
+          success: function(data) {
+            $('#result').html('<p class="text-success">' + data.message + '</p>');
+          },
+          error: function() {
+            $('#result').html('<p class="text-danger">Ошибка при отправке формы!</p>');
+          }
+        });
+      });
+    });
+    </script>
     <button type="submit" class="btn btn-success">Отправить заявку</button>
   </form>
 {% endblock %}

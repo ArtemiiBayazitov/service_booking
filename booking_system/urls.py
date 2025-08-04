@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from apps.bookings.views import get_busy_times
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('booking/', include('apps.bookings.urls'))
+    path('booking/', include('apps.bookings.urls')),
+    path('ajax_json/', get_busy_times, name='ajax_json')
 ]

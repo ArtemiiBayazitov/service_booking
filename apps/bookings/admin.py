@@ -10,6 +10,6 @@ class ServiceAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("service", "time_start", "time_end", "status", "full_name_client", "total_price")
+    list_display = ("service", "id", "time_start", "time_end", "status", "full_name_client", "total_price")
     list_filter = ("status", "service")
     search_fields = ("client_name", "client_contact")
