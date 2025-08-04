@@ -3,7 +3,7 @@
 
 {% block content %}
   <h2>Оформление бронирования</h2>
-  <form method="post" novalidate>
+  <form method="post" novalidate id="bookingForm">
     {% csrf_token %}
     {{ form.non_field_errors }}
     {% for field in form %}
@@ -15,54 +15,75 @@
         {% endfor %}
       </div>
     {% endfor %}
-    <button onclick="sendAjaxRequest()">Отправить запрос</button>
-    <div id="result"></div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-      $(document).ready(function() {
-      // Привязываем AJAX к событию change поля time_start
-      $('#id_time_start').on('change', function() {
-        $.ajax({
-          url: '{% url "ajax_json" %}',
-          type: 'GET',
-          data: {
-            time_start: $(this).val()
-          },
-          success: function(data) {
-            if (data.error) {
-              $('#result').html('<p class="text-danger">' + data.error + '</p>');
-            } else {
-              $('#result').html('<p class="text-success">' + data.message + '</p>');
-            }
-          },
-          error: function() {
-            $('#result').html('<p class="text-danger">Ошибка при загрузке данных!</p>');
-          }
-        });
-      });
-
-      // Предотвращаем перезагрузку при отправке формы (если нужно)
-      $('#bookingForm').on('submit', function(event) {
-        event.preventDefault(); // Отменяем стандартную отправку формы
-        // Если нужен POST-запрос через AJAX, можно добавить его здесь
-        $.ajax({
-          url: '{% url "ajax_json" %}',
-          type: 'POST',
-          data: $(this).serialize(), // Отправляем все данные формы
-          headers: {
-            'X-CSRFToken': $('input[name=csrfmiddlewaretoken]').val()
-          },
-          success: function(data) {
-            $('#result').html('<p class="text-success">' + data.message + '</p>');
-          },
-          error: function() {
-            $('#result').html('<p class="text-danger">Ошибка при отправке формы!</p>');
-          }
-        });
-      });
-    });
-    </script>
     <button type="submit" class="btn btn-success">Отправить заявку</button>
   </form>
+  <div id="result"></div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Функция для отправки AJAX и обновления URL
+      function fetchBusyTimes() {
+        var saunaId = $('#id_service').val();
+        var timeStart = $('#id_time_start').val();
+        if (saunaId && timeStart) {
+          // Обновляем URL без перезагрузки
+          var date = timeStart.split('T')[0]; // Извлекаем YYYY-MM-DD
+          var newUrl = '/booking/sauna/order/?sauna=' + saunaId + '&date=' + date;
+          history.pushState({}, '', newUrl);
+
+          // Отправляем AJAX-запрос
+          $.ajax({
+            url: '{% url "ajax_json" %}',
+            type: 'GET',
+            data: {
+              sauna: saunaId,
+              time_start: timeStart
+            },
+            success: function(data) {
+              if (data.error) {
+                $('#result').html('<p class="text-danger">' + data.error + '</p>');
+              } else {
+                let html = '<p class="text-success">Занятые времена:</p><ul>';
+                if (data.busy_times.length > 0) {
+                  $.each(data.busy_times, function(index, time) {
+                    html += '<li>' + time + '</li>';
+                  });
+                } else {
+                  html += '<li>Нет занятых времен</li>';
+                }
+                html += '</ul>';
+                $('#result').html(html);
+              }
+            },
+            error: function() {
+              $('#result').html('<p class="text-danger">Ошибка при загрузке данных!</p>');
+            }
+          });
+        } else {
+          $('#result').html('<p class="text-danger">Выберите сауну и дату</p>');
+        }
+      }
+
+      // Привязываем AJAX к изменению сауны или даты
+      $('#id_service, #id_time_start').on('change', fetchBusyTimes);
+
+      // Проверяем URL при загрузке страницы
+      function checkUrlParams() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var sauna = urlParams.get('sauna');
+        var date = urlParams.get('date');
+        if (sauna) {
+          $('#id_service').val(sauna);
+        }
+        if (date) {
+          $('#id_time_start').val(date + 'T00:00');
+        }
+        if (sauna && date) {
+          fetchBusyTimes();
+        }
+      }
+      checkUrlParams();
+    });
+  </script>
 {% endblock %}

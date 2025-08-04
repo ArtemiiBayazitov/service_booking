@@ -1,6 +1,5 @@
 from django.core.cache import cache
 from django.http import HttpResponse, Http404, HttpResponseNotFound, HttpResponseRedirect, JsonResponse
-# from django.utils.dateparse import dateparse
 from django.utils import timezone
 from django.urls import reverse
 from django.shortcuts import redirect
@@ -133,20 +132,17 @@ class OrderSuccessView(DetailView):
 
 def get_busy_times(request) -> JsonResponse:
     if request.method == 'GET' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        print(request)
-        service_id = request.GET.get('sauna')  # ID сауны из запроса
-        time_start = request.GET.get('time_start')  # Дата из поля
-        print(f'id service: {service_id}, time start: {time_start}')
+        sauna_id = request.GET.get('sauna')
+        time_start = request.GET.get('time_start')
         try:
             selected_date = datetime.strptime(time_start, '%Y-%m-%dT%H:%M')
             # Ищем активные заказы (PAID или IN_PROGRESS) для сауны на выбранный день
             busy_orders = Order.objects.filter(
-                service_id=service_id,
+                service=sauna_id,
                 time_start__date=selected_date.date(),
                 status__in=[Order.Status.PAID, Order.Status.IN_PROGRESS]
             ).values('time_start', 'time_end')
-            print(f'busy orders {busy_orders}')
-            # Формируем список занятых временных слотов
+            # Формируем список занятых времен
             busy_times = [
                 f"{order['time_start'].strftime('%H:%M')} - {order['time_end'].strftime('%H:%M')}"
                 for order in busy_orders
