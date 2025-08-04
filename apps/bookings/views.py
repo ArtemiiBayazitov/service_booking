@@ -9,6 +9,7 @@ from .models import Service, Order
 from .forms import OrderForm
 from django.views.generic import ListView, DetailView
 import random
+from datetime import timedelta
 
 
 class SaunaListView(ListView):
@@ -35,7 +36,11 @@ class OrderCreateView(CreateView):
             order_id = random.randint(1000000, 9999999)
 
         cleaned_data = form.cleaned_data.copy()
-        cleaned_data['service'] = form.cleaned_data['service'].id 
+        cleaned_data['service'] = form.cleaned_data['service'].id
+        duration = int(form.cleaned_data['duration'])
+        time_start = form.cleaned_data['time_start']
+        time_end = time_start + timedelta(hours=duration)
+        cleaned_data['time_end'] = time_end 
         cache.set(f'order:{order_id}', cleaned_data, timeout=600)
 
         return redirect('payment_page', id=order_id)
