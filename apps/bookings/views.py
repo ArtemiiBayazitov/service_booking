@@ -1,6 +1,5 @@
 from django.core.cache import cache
 from django.http import HttpResponse, Http404, HttpResponseNotFound, HttpResponseRedirect, JsonResponse
-from django.utils import timezone
 from django.urls import reverse
 from django.shortcuts import redirect
 from django.views.generic.edit import CreateView
@@ -11,6 +10,8 @@ from .forms import OrderForm
 from django.views.generic import ListView, DetailView
 import random
 from datetime import timedelta, datetime
+
+CACHES_ORDER_ID = []
 
 
 class SaunaListView(ListView):
@@ -32,6 +33,7 @@ class OrderCreateView(CreateView):
     success_url = 'payment/'
 
     def form_valid(self, form) -> HttpResponse:
+        global CACHES_ORDER_ID
         order_id = random.randint(1000000, 9999999)
         while cache.get(f'order:{order_id}'):
             order_id = random.randint(1000000, 9999999)
@@ -43,6 +45,8 @@ class OrderCreateView(CreateView):
         time_end = time_start + timedelta(hours=duration)
         cleaned_data['time_end'] = time_end 
         cache.set(f'order:{order_id}', cleaned_data, timeout=600)
+        CACHES_ORDER_ID.append(order_id)
+        print(f'id from form valid: {order_id}')
 
         return redirect('payment_page', id=order_id)
     
@@ -136,20 +140,27 @@ def get_busy_times(request) -> JsonResponse:
         time_start = request.GET.get('time_start')
         try:
             selected_date = datetime.strptime(time_start, '%Y-%m-%dT%H:%M')
-            # Ищем активные заказы (PAID или IN_PROGRESS) для сауны на выбранный день
             busy_orders = Order.objects.filter(
                 service=sauna_id,
                 time_start__date=selected_date.date(),
-                status__in=[Order.Status.PAID, Order.Status.IN_PROGRESS]
+                status__in=[Order.Status.PAID, Order.Status.PREDPAID, Order.Status.IN_PROGRESS]
             ).values('time_start', 'time_end')
-            # Формируем список занятых времен
             busy_times = [
                 f"{order['time_start'].strftime('%H:%M')} - {order['time_end'].strftime('%H:%M')}"
                 for order in busy_orders
             ]
+            print(CACHES_ORDER_ID)
+            
+            for key in CACHES_ORDER_ID:
+                order_data = cache.get(f'order:{key}')
+                if order_data and str(order_data.get('service')) == str(sauna_id):
+                    cache_time_start = order_data.get('time_start')
+                    if cache_time_start.date() == selected_date.date():
+                        cache_time_end = order_data.get('time_end')
+                        busy_times.append(
+                            f"{cache_time_start.strftime('%H:%M')} - {cache_time_end.strftime('%H:%M')}"
+                        )
             return JsonResponse({'busy_times': busy_times})
         except (ValueError, TypeError):
             return JsonResponse({'error': 'Неверный формат даты или сауны'}, status=400)
     return JsonResponse({'error': 'Не AJAX-запрос'}, status=400)
-
- 

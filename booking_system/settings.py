@@ -1,5 +1,6 @@
 from pathlib import Path
 from .config import SECRET_KEY as sk
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -88,3 +89,10 @@ STATICFILES_DIRS = [
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'cache_files')
+        }
+    }

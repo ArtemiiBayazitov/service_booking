@@ -15,17 +15,44 @@
         {% endfor %}
       </div>
     {% endfor %}
-    <button type="submit" class="btn btn-success">Отправить заявку</button>
+    <button type="submit" class="btn btn-success" id="submitButton">Отправить заявку</button>
   </form>
   <div id="result"></div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>
     $(document).ready(function() {
+      // Функция для проверки пересечения времени
+      function isTimeConflict(selectedStart, selectedEnd, busyTimes) {
+        // Парсим выбранное время
+        const start = new Date(selectedStart);
+        const end = new Date(selectedEnd);
+
+        // Проверяем пересечение с каждым занятым слотом
+        for (let time of busyTimes) {
+          const [startTime, endTime] = time.split(' - ');
+          const [startHour, startMinute] = startTime.split(':').map(Number);
+          const [endHour, endMinute] = endTime.split(':').map(Number);
+
+          // Создаём даты для занятого слота (в тот же день, что и selectedStart)
+          const busyStart = new Date(start);
+          busyStart.setHours(startHour, startMinute, 0, 0);
+          const busyEnd = new Date(start);
+          busyEnd.setHours(endHour, endMinute, 0, 0);
+
+          // Проверяем пересечение
+          if (start < busyEnd && end > busyStart) {
+            return true; // Есть конфликт
+          }
+        }
+        return false; // Нет конфликта
+      }
+
       // Функция для отправки AJAX и обновления URL
       function fetchBusyTimes() {
         var saunaId = $('#id_service').val();
         var timeStart = $('#id_time_start').val();
+        var duration = parseInt($('#id_duration').val()) || 1; // Длительность из поля
         if (saunaId && timeStart) {
           // Обновляем URL без перезагрузки
           var date = timeStart.split('T')[0]; // Извлекаем YYYY-MM-DD
@@ -43,6 +70,7 @@
             success: function(data) {
               if (data.error) {
                 $('#result').html('<p class="text-danger">' + data.error + '</p>');
+                $('#submitButton').prop('disabled', true); // Отключаем кнопку при ошибке
               } else {
                 let html = '<p class="text-success">Занятые времена:</p><ul>';
                 if (data.busy_times.length > 0) {
@@ -54,19 +82,32 @@
                 }
                 html += '</ul>';
                 $('#result').html(html);
+
+                // Проверяем пересечение
+                if (timeStart && duration) {
+                  const selectedStart = new Date(timeStart);
+                  const selectedEnd = new Date(selectedStart.getTime() + duration * 60 * 60 * 1000);
+                  const hasConflict = isTimeConflict(selectedStart, selectedEnd, data.busy_times);
+                  $('#submitButton').prop('disabled', hasConflict);
+                  if (hasConflict) {
+                    $('#result').append('<p class="text-danger">Выбранное время пересекается с занятым слотом!</p>');
+                  }
+                }
               }
             },
             error: function() {
               $('#result').html('<p class="text-danger">Ошибка при загрузке данных!</p>');
+              $('#submitButton').prop('disabled', true);
             }
           });
         } else {
           $('#result').html('<p class="text-danger">Выберите сауну и дату</p>');
+          $('#submitButton').prop('disabled', true);
         }
       }
 
-      // Привязываем AJAX к изменению сауны или даты
-      $('#id_service, #id_time_start').on('change', fetchBusyTimes);
+      // Привязываем AJAX к изменению сауны, даты или длительности
+      $('#id_service, #id_time_start, #id_duration').on('change', fetchBusyTimes);
 
       // Проверяем URL при загрузке страницы
       function checkUrlParams() {
