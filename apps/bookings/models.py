@@ -50,7 +50,7 @@ class Order(models.Model):
 
         subject = "Подтверждение заказа"
         message = (
-            f"Спасибо за ваш заказ {self.pk}!\n\n"
+            f"Спасибо за ваш заказ! Номер: {self.pk}!\n\n"
             f"Дата и время: {start_str} — {end_str}\n"
             f"Услуга: {self.service}\n"
             f"Стоимость: {self.total_price} ₽\n"
@@ -73,9 +73,9 @@ class Order(models.Model):
     def save(self, *args, **kwargs) -> None:
         self.total_price = self.total_price_count
         is_new = self.pk is None
+        super().save(*args, **kwargs)
         if is_new:
             self.send_confirmation_email()
-        super().save(*args, **kwargs)
         
     def clean(self) -> None:
         super().clean()
