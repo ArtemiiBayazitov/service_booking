@@ -1,6 +1,9 @@
 from datetime import timedelta
 from django.db import models
 from django.forms import ValidationError
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.timezone import localtime
 
 
 class Service(models.Model):
@@ -41,6 +44,26 @@ class Order(models.Model):
     extra_data = models.JSONField(default=dict, blank=True)
     total_price = models.FloatField(default=0)
     
+    def send_confirmation_email(self):
+        start_str = localtime(self.time_start).strftime("%d.%m.%Y %H:%M")
+        end_str = localtime(self.time_end).strftime("%d.%m.%Y %H:%M")
+
+        subject = "Подтверждение заказа"
+        message = (
+            f"Спасибо за ваш заказ {self.pk}!\n\n"
+            f"Дата и время: {start_str} — {end_str}\n"
+            f"Услуга: {self.service}\n"
+            f"Стоимость: {self.total_price} ₽\n"
+        )
+
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [self.email_client],
+            fail_silently=False,
+        )
+
     @property
     def total_price_count(self) -> float:
         price_per_hour = self.service.price
@@ -49,8 +72,11 @@ class Order(models.Model):
     
     def save(self, *args, **kwargs) -> None:
         self.total_price = self.total_price_count
+        is_new = self.pk is None
+        if is_new:
+            self.send_confirmation_email()
         super().save(*args, **kwargs)
-
+        
     def clean(self) -> None:
         super().clean()
         if self.time_start and self.time_end:
